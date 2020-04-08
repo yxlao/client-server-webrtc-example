@@ -6,7 +6,7 @@
 #ifndef WEBRTC_EXAMPLE_SERVER_OBSERVERS_H
 #define WEBRTC_EXAMPLE_SERVER_OBSERVERS_H
 
-#include <webrtc/api/peerconnectioninterface.h>
+#include <api/peerconnectioninterface.h>
 
 #include <functional>
 
@@ -32,7 +32,8 @@ public:
     void OnRemoveStream(webrtc::MediaStreamInterface* /* stream */) {}
 
     // Override data channel change.
-    void OnDataChannel(webrtc::DataChannelInterface* channel) {
+    void OnDataChannel(
+            rtc::scoped_refptr<webrtc::DataChannelInterface> channel) {
         on_data_channel(channel);
     }
 
@@ -97,10 +98,12 @@ public:
     void OnFailure(const std::string& /* error */) {}
 
     // Unimplemented virtual function.
-    int AddRef() const { return 0; }
+    void AddRef() const {}
 
     // Unimplemented virtual function.
-    int Release() const { return 0; }
+    rtc::RefCountReleaseStatus Release() const {
+        return rtc::RefCountReleaseStatus::kDroppedLastRef;
+    }
 
 private:
     std::function<void(webrtc::SessionDescriptionInterface*)> on_success;
@@ -120,10 +123,12 @@ public:
     void OnFailure(const std::string& /* error */) {}
 
     // Unimplemented virtual function.
-    int AddRef() const { return 0; }
+    void AddRef() const {}
 
     // Unimplemented virtual function.
-    int Release() const { return 0; }
+    rtc::RefCountReleaseStatus Release() const {
+        return rtc::RefCountReleaseStatus::kDroppedLastRef;
+    }
 };
 
 #endif  // WEBRTC_EXAMPLE_SERVER_OBSERVERS_H

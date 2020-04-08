@@ -8,13 +8,13 @@
 //
 // Author: brian@brkho.com
 
+#include <api/peerconnectioninterface.h>
 #include <rapidjson/document.h>
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
-#include <webrtc/api/peerconnectioninterface.h>
-#include <webrtc/base/physicalsocketserver.h>
-#include <webrtc/base/ssladapter.h>
-#include <webrtc/base/thread.h>
+#include <rtc_base/physicalsocketserver.h>
+#include <rtc_base/ssladapter.h>
+#include <rtc_base/thread.h>
 
 #include <iostream>
 #include <thread>
@@ -71,14 +71,12 @@ SetSessionDescriptionObserver set_session_description_observer;
 // Callback for when the data channel is successfully created. We need to
 // re-register the updated data channel here.
 void OnDataChannelCreated(webrtc::DataChannelInterface* channel) {
-    std::cout << "[Server] OnDataChannelCreated" << std::endl;
     data_channel = channel;
     data_channel->RegisterObserver(&data_channel_observer);
 }
 
 // Callback for when the STUN server responds with the ICE candidates.
 void OnIceCandidate(const webrtc::IceCandidateInterface* candidate) {
-    std::cout << "[Server] OnIceCandidate" << std::endl;
     std::string candidate_str;
     candidate->ToString(&candidate_str);
     rapidjson::Document message_object;
@@ -103,16 +101,12 @@ void OnIceCandidate(const webrtc::IceCandidateInterface* candidate) {
     rapidjson::Writer<rapidjson::StringBuffer> writer(strbuf);
     message_object.Accept(writer);
     std::string payload = strbuf.GetString();
-    // Step 8: Client 2 receives Client 1’s ICE candidates, finds its own ICE
-    // candidates via the same mechanism, and sends them to Client 1 via the
-    // signaling server.
     ws_server.send(websocket_connection_handler, payload,
                    websocketpp::frame::opcode::value::text);
 }
 
 // Callback for when the server receives a message on the data channel.
 void OnDataChannelMessage(const webrtc::DataBuffer& buffer) {
-    std::cout << "[Server] OnDataChannelMessage" << std::endl;
     // std::string data(buffer.data.data<char>(), buffer.data.size());
     // std::cout << data << std::endl;
     // std::string str = "pong";
@@ -121,11 +115,9 @@ void OnDataChannelMessage(const webrtc::DataBuffer& buffer) {
     data_channel->Send(buffer);
 }
 
-// Step 6: Client 2 sends the answer back to Client 1 through the signaling
-// server. Callback for when the answer is created. This sends the answer back
-// to the client.
+// Callback for when the answer is created. This sends the answer back to the
+// client.
 void OnAnswerCreated(webrtc::SessionDescriptionInterface* desc) {
-    std::cout << "[Server] OnAnswerCreated" << std::endl;
     peer_connection->SetLocalDescription(&set_session_description_observer,
                                          desc);
     // Apologies for the poor code ergonomics here; I think rapidjson is just
@@ -160,7 +152,6 @@ void OnWebSocketMessage(WebSocketServer* /* s */,
     message_object.Parse(msg->get_payload().c_str());
     // Probably should do some error checking on the JSON object.
     std::string type = message_object["type"].GetString();
-    std::cout << "[Server] OnWebSocketMessage::" << type << std::endl;
     if (type == "ping") {
         std::string id = msg->get_payload().c_str();
         ws_server.send(websocket_connection_handler, id,
@@ -183,13 +174,13 @@ void OnWebSocketMessage(WebSocketServer* /* s */,
 
         webrtc::SdpParseError error;
         webrtc::SessionDescriptionInterface* session_description(
-                webrtc::CreateSessionDescription("offer", sdp, &error));
+                webrtc::CreateSessionDescription(std::string("offer").c_str(),
+                                                 sdp.c_str(), &error));
+        const webrtc::PeerConnectionInterface::RTCOfferAnswerOptions options;
         peer_connection->SetRemoteDescription(&set_session_description_observer,
                                               session_description);
-        // Step 5: Client 2 receives the offer from the signaling server and
-        // passes it to RTCPeerConnection.createAnswer.
         peer_connection->CreateAnswer(&create_session_description_observer,
-                                      nullptr);
+                                      options);
     } else if (type == "candidate") {
         std::string candidate =
                 message_object["payload"]["candidate"].GetString();
@@ -199,9 +190,7 @@ void OnWebSocketMessage(WebSocketServer* /* s */,
         webrtc::SdpParseError error;
         auto candidate_object = webrtc::CreateIceCandidate(
                 sdp_mid, sdp_mline_index, candidate, &error);
-        std::cout << "AddIceCandidate: "
-                  << peer_connection->AddIceCandidate(candidate_object)
-                  << std::endl;
+        peer_connection->AddIceCandidate(candidate_object);
     } else {
         std::cout << "Unrecognized WebSocket message type." << std::endl;
     }
@@ -210,14 +199,15 @@ void OnWebSocketMessage(WebSocketServer* /* s */,
 // The thread entry point for the WebRTC thread. This sets the WebRTC thread as
 // the signaling thread and creates a worker thread in the background.
 void SignalThreadEntry() {
-    std::cout << "[Server] SignalThreadEntry" << std::endl;
     // Create the PeerConnectionFactory.
     rtc::InitializeSSL();
-    peer_connection_factory = webrtc::CreatePeerConnectionFactory();
-    rtc::Thread* signaling_thread = rtc::Thread::Current();
-    signaling_thread->set_socketserver(&socket_server);
-    signaling_thread->Run();
-    signaling_thread->set_socketserver(nullptr);
+    peer_connection_factory = webrtc::CreateModularPeerConnectionFactory(
+            nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
+
+    // rtc::Thread* signaling_thread = rtc::Thread::Current();
+    // signaling_thread->set_socketserver(&socket_server);
+    // signaling_thread->Run();
+    // signaling_thread->set_socketserver(nullptr);
 }
 
 // Main entry point of the code.
@@ -230,7 +220,7 @@ int main() {
     ws_server.init_asio();
     ws_server.clear_access_channels(websocketpp::log::alevel::all);
     ws_server.set_reuse_addr(true);
-    ws_server.listen(8888);
+    ws_server.listen(8080);
     ws_server.start_accept();
     // I don't do it here, but you should gracefully handle closing the
     // connection.
