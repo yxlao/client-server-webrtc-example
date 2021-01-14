@@ -1,9 +1,11 @@
 /**
- * This a minimal fully functional example for setting up a client written in JavaScript that
- * communicates with a server via WebRTC data channels. This uses WebSockets to perform the WebRTC
- * handshake (offer/accept SDP) with the server. We only use WebSockets for the initial handshake
- * because TCP often presents too much latency in the context of real-time action games. WebRTC
- * data channels, on the other hand, allow for unreliable and unordered message sending via SCTP
+ * This a minimal fully functional example for setting up a client written in
+ * JavaScript that communicates with a server via WebRTC data channels. This
+ * uses WebSockets to perform the WebRTC handshake (offer/accept SDP) with the
+ * server. We only use WebSockets for the initial handshake because TCP often
+ * presents too much latency in the context of real-time action games. WebRTC
+ * data channels, on the other hand, allow for unreliable and unordered message
+ * sending via SCTP.
  *
  * Brian Ho
  * brian@brkho.com
