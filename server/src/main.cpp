@@ -152,6 +152,7 @@ void OnWebSocketMessage(WebSocketServer* /* s */,
     message_object.Parse(msg->get_payload().c_str());
     // Probably should do some error checking on the JSON object.
     std::string type = message_object["type"].GetString();
+    std::cout << "type: " << type << std::endl;
     if (type == "ping") {
         std::string id = msg->get_payload().c_str();
         ws_server.send(websocket_connection_handler, id,
@@ -190,6 +191,9 @@ void OnWebSocketMessage(WebSocketServer* /* s */,
         auto candidate_object = webrtc::CreateIceCandidate(
                 sdp_mid, sdp_mline_index, candidate, &error);
         peer_connection->AddIceCandidate(candidate_object);
+    } else if (type == "print_only") {
+        std::string message = message_object["payload"].GetString();
+        std::cout << "string message: " << message << std::endl;
     } else {
         std::cout << "Unrecognized WebSocket message type." << std::endl;
     }
@@ -217,7 +221,7 @@ int main() {
     ws_server.init_asio();
     ws_server.clear_access_channels(websocketpp::log::alevel::all);
     ws_server.set_reuse_addr(true);
-    ws_server.listen(8080);
+    ws_server.listen(8888);
     ws_server.start_accept();
     // I don't do it here, but you should gracefully handle closing the
     // connection.
