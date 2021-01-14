@@ -174,7 +174,8 @@ void OnWebSocketMessage(WebSocketServer* /* s */,
 
         webrtc::SdpParseError error;
         webrtc::SessionDescriptionInterface* session_description(
-                webrtc::CreateSessionDescription("offer", sdp, &error));
+                webrtc::CreateSessionDescription(std::string("offer"), sdp,
+                                                 &error));
         peer_connection->SetRemoteDescription(&set_session_description_observer,
                                               session_description);
         peer_connection->CreateAnswer(&create_session_description_observer,

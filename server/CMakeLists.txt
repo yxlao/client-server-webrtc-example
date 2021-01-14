@@ -8,7 +8,7 @@ find_package(Threads REQUIRED)
 
 include_directories("src/")
 include_directories("lib/")
-include_directories("lib/webrtc/include")
+include_directories("lib/libwebrtc-1.0.0-linux-x64/include")
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 file(GLOB PROJECT_CONFIGS CMakeLists.txt
@@ -26,9 +26,11 @@ set_target_properties(server_exe PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY /${CMAKE_BINARY_DIR}/bin/
 )
 target_link_libraries(server_exe
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/webrtc/lib/x64/Release/libwebrtc_full.a
+    ${CMAKE_CURRENT_SOURCE_DIR}/lib/libwebrtc-1.0.0-linux-x64/lib/libwebrtc.a
     ${CMAKE_THREAD_LIBS_INIT}
     boost_system
     pthread
+    ${CMAKE_DL_LIBS}
+    X11
 )
 
