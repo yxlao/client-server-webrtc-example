@@ -74,6 +74,9 @@ function onWebSocketOpen() {
   rtcPeerConnection.onicecandidate = onIceCandidate;
   rtcPeerConnection.createOffer(onOfferCreated, () => {}, sdpConstraints);
   console.log("onWebSocketOpen end");
+}
+
+function send_hello_world() {
   webSocketConnection.send(
     JSON.stringify({ type: "print_only", payload: "hello, world" })
   );
