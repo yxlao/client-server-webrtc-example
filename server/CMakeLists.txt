@@ -20,6 +20,7 @@ add_executable(server_exe
     src/main.cpp
     src/observers.h
 )
+target_compile_definitions(server_exe PUBLIC _GLIBCXX_USE_CXX11_ABI=0)
 target_compile_definitions(server_exe PUBLIC WEBRTC_POSIX)
 set_target_properties(server_exe PROPERTIES
     OUTPUT_NAME example-server
