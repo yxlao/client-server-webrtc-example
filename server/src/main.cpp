@@ -151,12 +151,12 @@ void OnAnswerCreated(webrtc::SessionDescriptionInterface* desc) {
 void OnWebSocketMessage(WebSocketServer* /* s */,
                         websocketpp::connection_hdl hdl,
                         message_ptr msg) {
-    std::cout << "[Server] OnWebSocketMessage" << std::endl;
     websocket_connection_handler = hdl;
     rapidjson::Document message_object;
     message_object.Parse(msg->get_payload().c_str());
     // Probably should do some error checking on the JSON object.
     std::string type = message_object["type"].GetString();
+    std::cout << "[Server] OnWebSocketMessage::" << type << std::endl;
     if (type == "ping") {
         std::string id = msg->get_payload().c_str();
         ws_server.send(websocket_connection_handler, id,

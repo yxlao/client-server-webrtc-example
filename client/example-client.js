@@ -79,8 +79,8 @@ function onWebSocketOpen() {
 
 // Callback for when we receive a message from the server via the WebSocket.
 function onWebSocketMessage(event) {
-  console.log("[Client] onWebSocketMessage");
   const messageObject = JSON.parse(event.data);
+  console.log("[Client] onWebSocketMessage::" + messageObject.type);
   if (messageObject.type === "ping") {
     const key = messageObject.payload;
     pingLatency[key] = performance.now() - pingTimes[key];
