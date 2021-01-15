@@ -82,6 +82,7 @@ SetSessionDescriptionObserver set_session_description_observer;
 // Callback for when the data channel is successfully created. We need to
 // re-register the updated data channel here.
 void OnDataChannelCreated(webrtc::DataChannelInterface* channel) {
+    std::cout << "server::OnDataChannelCreated" << std::endl;
     data_channel = channel;
     data_channel->RegisterObserver(&data_channel_observer);
 }
@@ -118,8 +119,9 @@ void OnIceCandidate(const webrtc::IceCandidateInterface* candidate) {
 
 // Callback for when the server receives a message on the data channel.
 void OnDataChannelMessage(const webrtc::DataBuffer& buffer) {
-    std::string data(buffer.data.data<char>(), buffer.data.size());
-    std::cout << data << std::endl;
+    std::cout << "server::OnDataChannelMessage" << std::endl;
+    // std::string data(buffer.data.data<char>(), buffer.data.size());
+    // std::cout << data << std::endl;
     // std::string str = "pong";
     // webrtc::DataBuffer resp(rtc::CopyOnWriteBuffer(str.c_str(),
     // str.length()), false /* binary */);

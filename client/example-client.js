@@ -12,7 +12,7 @@
  */
 
 // URL to the server with the port we are using for WebSockets.
-const webSocketUrl = "ws://localhost:8888";
+const webSocketUrl = "ws://73.70.46.61:8888";
 // The WebSocket object used to manage a connection.
 let webSocketConnection = null;
 // The RTCPeerConnection through which we engage in the SDP handshake.
@@ -39,8 +39,8 @@ function onDataChannelOpen() {
   console.log("Data channel opened!");
 }
 
-function onDataChannelError() {
-  console.log("Data channel error!");
+function onDataChannelError(description) {
+  console.log("Data channel error: " + description.error);
 }
 
 // Callback for when the STUN server responds with the ICE candidates.
