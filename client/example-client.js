@@ -77,7 +77,7 @@ function onWebSocketOpen() {
   const sdpConstraints = {
     mandatory: {
       OfferToReceiveAudio: false,
-      OfferToReceiveVideo: false,
+      OfferToReceiveVideo: true,
     },
   };
   rtcPeerConnection.onicecandidate = onIceCandidate;
