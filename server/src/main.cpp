@@ -118,8 +118,9 @@ void OnDataChannelMessage(const webrtc::DataBuffer& buffer) {
     data_channel->Send(buffer);
 }
 
-// Callback for when the answer is created. This sends the answer back to the
-// client.
+// Step 6: Client 2 sends the answer back to Client 1 through the signaling
+// server. Callback for when the answer is created. This sends the answer back
+// to the client.
 void OnAnswerCreated(webrtc::SessionDescriptionInterface* desc) {
     std::cout << "[Server] OnAnswerCreated" << std::endl;
     peer_connection->SetLocalDescription(&set_session_description_observer,
@@ -182,6 +183,8 @@ void OnWebSocketMessage(WebSocketServer* /* s */,
                 webrtc::CreateSessionDescription("offer", sdp, &error));
         peer_connection->SetRemoteDescription(&set_session_description_observer,
                                               session_description);
+        // Step 5: Client 2 receives the offer from the signaling server and
+        // passes it to RTCPeerConnection.createAnswer.
         peer_connection->CreateAnswer(&create_session_description_observer,
                                       nullptr);
     } else if (type == "candidate") {
@@ -193,7 +196,9 @@ void OnWebSocketMessage(WebSocketServer* /* s */,
         webrtc::SdpParseError error;
         auto candidate_object = webrtc::CreateIceCandidate(
                 sdp_mid, sdp_mline_index, candidate, &error);
-        peer_connection->AddIceCandidate(candidate_object);
+        std::cout << "AddIceCandidate: "
+                  << peer_connection->AddIceCandidate(candidate_object)
+                  << std::endl;
     } else {
         std::cout << "Unrecognized WebSocket message type." << std::endl;
     }

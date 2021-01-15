@@ -40,6 +40,7 @@ function onDataChannelOpen() {
 }
 
 // Callback for when the STUN server responds with the ICE candidates.
+// Step 7: Client 1 send the ICE candidate to server.
 function onIceCandidate(event) {
   console.log("[Client] onIceCandidate");
   if (event && event.candidate) {
@@ -50,6 +51,7 @@ function onIceCandidate(event) {
 }
 
 // Callback for when the SDP offer was successfully created.
+// Step 4: Client 1 sends the offer to Client 2.
 function onOfferCreated(description) {
   console.log("[Client] onOfferCreated");
   rtcPeerConnection.setLocalDescription(description);
@@ -74,6 +76,7 @@ function onWebSocketOpen() {
     },
   };
   rtcPeerConnection.onicecandidate = onIceCandidate;
+  // Step 3: Client 1 creates an “offer".
   rtcPeerConnection.createOffer(onOfferCreated, () => {}, sdpConstraints);
 }
 
@@ -85,6 +88,7 @@ function onWebSocketMessage(event) {
     const key = messageObject.payload;
     pingLatency[key] = performance.now() - pingTimes[key];
   } else if (messageObject.type === "answer") {
+    // Step 7: Client 1 receives and verifies the answer.
     rtcPeerConnection.setRemoteDescription(
       new RTCSessionDescription(messageObject.payload)
     );
