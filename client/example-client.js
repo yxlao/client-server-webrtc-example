@@ -135,8 +135,12 @@ function sendWebSocketPing() {
 }
 
 // Pings the server via the DataChannel once the connection has been established.
-function ping() {
+function webSocketPing() {
   startTime = performance.now();
-  // pingInterval = setInterval(sendDataChannelPing, 1000.0 / PINGS_PER_SECOND);
   pingInterval = setInterval(sendWebSocketPing, 1000.0 / PINGS_PER_SECOND);
+}
+
+function dataChannelPing() {
+  startTime = performance.now();
+  pingInterval = setInterval(sendDataChannelPing, 1000.0 / PINGS_PER_SECOND);
 }
