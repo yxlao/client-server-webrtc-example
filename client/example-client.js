@@ -1,18 +1,16 @@
 /**
- * This a minimal fully functional example for setting up a client written in
- * JavaScript that communicates with a server via WebRTC data channels. This
- * uses WebSockets to perform the WebRTC handshake (offer/accept SDP) with the
- * server. We only use WebSockets for the initial handshake because TCP often
- * presents too much latency in the context of real-time action games. WebRTC
- * data channels, on the other hand, allow for unreliable and unordered message
- * sending via SCTP.
+ * This a minimal fully functional example for setting up a client written in JavaScript that
+ * communicates with a server via WebRTC data channels. This uses WebSockets to perform the WebRTC
+ * handshake (offer/accept SDP) with the server. We only use WebSockets for the initial handshake
+ * because TCP often presents too much latency in the context of real-time action games. WebRTC
+ * data channels, on the other hand, allow for unreliable and unordered message sending via SCTP
  *
  * Brian Ho
  * brian@brkho.com
  */
 
 // URL to the server with the port we are using for WebSockets.
-const webSocketUrl = "ws://73.70.46.61:8888";
+const webSocketUrl = "ws://54.191.242.239:8080";
 // The WebSocket object used to manage a connection.
 let webSocketConnection = null;
 // The RTCPeerConnection through which we engage in the SDP handshake.
@@ -23,8 +21,8 @@ let dataChannel = null;
 const pingTimes = {};
 const pingLatency = {};
 let pingCount = 0;
-const PINGS_PER_SECOND = 5;
-const SECONDS_TO_PING = 2;
+const PINGS_PER_SECOND = 20;
+const SECONDS_TO_PING = 20;
 let pingInterval;
 let startTime;
 
@@ -39,13 +37,8 @@ function onDataChannelOpen() {
   console.log("Data channel opened!");
 }
 
-function onDataChannelError(description) {
-  console.log("Data channel error: " + description.error);
-}
-
 // Callback for when the STUN server responds with the ICE candidates.
 function onIceCandidate(event) {
-  console.log("client: onIceCandidate");
   if (event && event.candidate) {
     webSocketConnection.send(
       JSON.stringify({ type: "candidate", payload: event.candidate })
@@ -59,20 +52,16 @@ function onOfferCreated(description) {
   webSocketConnection.send(
     JSON.stringify({ type: "offer", payload: description })
   );
-  console.log("onOfferCreated success");
 }
 
 // Callback for when the WebSocket is successfully opened.
 function onWebSocketOpen() {
-  console.log("onWebSocketOpen begin");
-  // Google STUN server is for development use only.
   const config = { iceServers: [{ url: "stun:stun.l.google.com:19302" }] };
   rtcPeerConnection = new RTCPeerConnection(config);
   const dataChannelConfig = { ordered: false, maxRetransmits: 0 };
   dataChannel = rtcPeerConnection.createDataChannel("dc", dataChannelConfig);
   dataChannel.onmessage = onDataChannelMessage;
   dataChannel.onopen = onDataChannelOpen;
-  dataChannel.onerror = onDataChannelError;
   const sdpConstraints = {
     mandatory: {
       OfferToReceiveAudio: false,
@@ -81,13 +70,6 @@ function onWebSocketOpen() {
   };
   rtcPeerConnection.onicecandidate = onIceCandidate;
   rtcPeerConnection.createOffer(onOfferCreated, () => {}, sdpConstraints);
-  console.log("onWebSocketOpen end");
-}
-
-function send_hello_world() {
-  webSocketConnection.send(
-    JSON.stringify({ type: "print_only", payload: "hello, world" })
-  );
 }
 
 // Callback for when we receive a message from the server via the WebSocket.
@@ -97,12 +79,10 @@ function onWebSocketMessage(event) {
     const key = messageObject.payload;
     pingLatency[key] = performance.now() - pingTimes[key];
   } else if (messageObject.type === "answer") {
-    console.log("answer received from server");
     rtcPeerConnection.setRemoteDescription(
       new RTCSessionDescription(messageObject.payload)
     );
   } else if (messageObject.type === "candidate") {
-    console.log("candidate received from server");
     rtcPeerConnection.addIceCandidate(
       new RTCIceCandidate(messageObject.payload)
     );
@@ -113,11 +93,9 @@ function onWebSocketMessage(event) {
 
 // Connects by creating a new WebSocket connection and associating some callbacks.
 function connect() {
-  console.log("connect begin");
   webSocketConnection = new WebSocket(webSocketUrl);
   webSocketConnection.onopen = onWebSocketOpen;
   webSocketConnection.onmessage = onWebSocketMessage;
-  console.log("connect end");
 }
 
 function printLatency() {
@@ -141,7 +119,6 @@ function sendDataChannelPing() {
 function sendWebSocketPing() {
   const key = pingCount + "";
   pingTimes[key] = performance.now();
-  console.log("key: " + key);
   webSocketConnection.send(JSON.stringify({ type: "ping", payload: key }));
   pingCount++;
   if (pingCount === PINGS_PER_SECOND * SECONDS_TO_PING) {
@@ -152,12 +129,8 @@ function sendWebSocketPing() {
 }
 
 // Pings the server via the DataChannel once the connection has been established.
-function wsPing() {
+function ping() {
   startTime = performance.now();
+  // pingInterval = setInterval(sendDataChannelPing, 1000.0 / PINGS_PER_SECOND);
   pingInterval = setInterval(sendWebSocketPing, 1000.0 / PINGS_PER_SECOND);
-}
-
-function dataPing() {
-  startTime = performance.now();
-  pingInterval = setInterval(sendDataChannelPing, 1000.0 / PINGS_PER_SECOND);
 }

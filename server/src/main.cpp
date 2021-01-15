@@ -39,42 +39,31 @@ typedef WebSocketServer::message_ptr message_ptr;
 
 // The WebSocket server being used to handshake with the clients.
 WebSocketServer ws_server;
-
-// The peer connection factory that sets up signaling and worker threads. It is
+// The peer conncetion factory that sets up signaling and worker threads. It is
 // also used to create the PeerConnection.
-// Signaling thread: all other tasks.
-// Worker thread: resource-intensive tasks e.g. media streaming.
 rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface>
         peer_connection_factory;
-
 // The socket that the signaling thread and worker thread communicate on.
 rtc::PhysicalSocketServer socket_server;
-
 // The separate thread where all of the WebRTC code runs since we use the main
 // thread for the WebSocket listening loop.
 std::thread webrtc_thread;
-
 // The WebSocket connection handler that uniquely identifies one of the
 // connections that the WebSocket has open. If you want to have multiple
 // connections, you will need to store more than one of these.
 websocketpp::connection_hdl websocket_connection_handler;
-
 // The peer connection through which we engage in the SDP handshake.
 rtc::scoped_refptr<webrtc::PeerConnectionInterface> peer_connection;
-
 // The data channel used to communicate.
 rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel;
-
 // The observer that responds to peer connection events.
 PeerConnectionObserver peer_connection_observer(OnDataChannelCreated,
                                                 OnIceCandidate);
 // The observer that responds to data channel events.
 DataChannelObserver data_channel_observer(OnDataChannelMessage);
-
 // The observer that responds to session description creation events.
 CreateSessionDescriptionObserver create_session_description_observer(
         OnAnswerCreated);
-
 // The observer that responds to session description set events. We don't really
 // use this one here.
 SetSessionDescriptionObserver set_session_description_observer;
@@ -82,14 +71,12 @@ SetSessionDescriptionObserver set_session_description_observer;
 // Callback for when the data channel is successfully created. We need to
 // re-register the updated data channel here.
 void OnDataChannelCreated(webrtc::DataChannelInterface* channel) {
-    std::cout << "server::OnDataChannelCreated" << std::endl;
     data_channel = channel;
     data_channel->RegisterObserver(&data_channel_observer);
 }
 
 // Callback for when the STUN server responds with the ICE candidates.
 void OnIceCandidate(const webrtc::IceCandidateInterface* candidate) {
-    std::cout << "server::OnIceCandidate" << std::endl;
     std::string candidate_str;
     candidate->ToString(&candidate_str);
     rapidjson::Document message_object;
@@ -120,7 +107,6 @@ void OnIceCandidate(const webrtc::IceCandidateInterface* candidate) {
 
 // Callback for when the server receives a message on the data channel.
 void OnDataChannelMessage(const webrtc::DataBuffer& buffer) {
-    std::cout << "server::OnDataChannelMessage" << std::endl;
     // std::string data(buffer.data.data<char>(), buffer.data.size());
     // std::cout << data << std::endl;
     // std::string str = "pong";
@@ -132,7 +118,6 @@ void OnDataChannelMessage(const webrtc::DataBuffer& buffer) {
 // Callback for when the answer is created. This sends the answer back to the
 // client.
 void OnAnswerCreated(webrtc::SessionDescriptionInterface* desc) {
-    std::cout << "server::OnAnswerCreated" << std::endl;
     peer_connection->SetLocalDescription(&set_session_description_observer,
                                          desc);
     // Apologies for the poor code ergonomics here; I think rapidjson is just
@@ -156,7 +141,6 @@ void OnAnswerCreated(webrtc::SessionDescriptionInterface* desc) {
     std::string payload = strbuf.GetString();
     ws_server.send(websocket_connection_handler, payload,
                    websocketpp::frame::opcode::value::text);
-    std::cout << "server::OnAnswerCreated done" << std::endl;
 }
 
 // Callback for when the WebSocket server receives a message from the client.
@@ -168,7 +152,6 @@ void OnWebSocketMessage(WebSocketServer* /* s */,
     message_object.Parse(msg->get_payload().c_str());
     // Probably should do some error checking on the JSON object.
     std::string type = message_object["type"].GetString();
-    std::cout << "type: " << type << std::endl;
     if (type == "ping") {
         std::string id = msg->get_payload().c_str();
         ws_server.send(websocket_connection_handler, id,
@@ -191,11 +174,9 @@ void OnWebSocketMessage(WebSocketServer* /* s */,
 
         webrtc::SdpParseError error;
         webrtc::SessionDescriptionInterface* session_description(
-                webrtc::CreateSessionDescription(std::string("offer"), sdp,
-                                                 &error));
+                webrtc::CreateSessionDescription("offer", sdp, &error));
         peer_connection->SetRemoteDescription(&set_session_description_observer,
                                               session_description);
-        // Triggers OnAnswerCreated.
         peer_connection->CreateAnswer(&create_session_description_observer,
                                       nullptr);
     } else if (type == "candidate") {
@@ -207,11 +188,7 @@ void OnWebSocketMessage(WebSocketServer* /* s */,
         webrtc::SdpParseError error;
         auto candidate_object = webrtc::CreateIceCandidate(
                 sdp_mid, sdp_mline_index, candidate, &error);
-        // This should trigger OnIceCandidate.
         peer_connection->AddIceCandidate(candidate_object);
-    } else if (type == "print_only") {
-        std::string message = message_object["payload"].GetString();
-        std::cout << "string message: " << message << std::endl;
     } else {
         std::cout << "Unrecognized WebSocket message type." << std::endl;
     }
@@ -239,7 +216,7 @@ int main() {
     ws_server.init_asio();
     ws_server.clear_access_channels(websocketpp::log::alevel::all);
     ws_server.set_reuse_addr(true);
-    ws_server.listen(8888);
+    ws_server.listen(8080);
     ws_server.start_accept();
     // I don't do it here, but you should gracefully handle closing the
     // connection.
