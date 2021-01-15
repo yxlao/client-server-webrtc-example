@@ -103,6 +103,9 @@ void OnIceCandidate(const webrtc::IceCandidateInterface* candidate) {
     rapidjson::Writer<rapidjson::StringBuffer> writer(strbuf);
     message_object.Accept(writer);
     std::string payload = strbuf.GetString();
+    // Step 8: Client 2 receives Client 1’s ICE candidates, finds its own ICE
+    // candidates via the same mechanism, and sends them to Client 1 via the
+    // signaling server.
     ws_server.send(websocket_connection_handler, payload,
                    websocketpp::frame::opcode::value::text);
 }
