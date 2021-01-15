@@ -28,17 +28,20 @@ let startTime;
 
 // Callback for when we receive a message on the data channel.
 function onDataChannelMessage(event) {
+  console.log("[Client] onDataChannelMessage");
   const key = event.data;
   pingLatency[key] = performance.now() - pingTimes[key];
 }
 
 // Callback for when the data channel was successfully opened.
 function onDataChannelOpen() {
+  console.log("[Client] onDataChannelOpen");
   console.log("Data channel opened!");
 }
 
 // Callback for when the STUN server responds with the ICE candidates.
 function onIceCandidate(event) {
+  console.log("[Client] onIceCandidate");
   if (event && event.candidate) {
     webSocketConnection.send(
       JSON.stringify({ type: "candidate", payload: event.candidate })
@@ -48,6 +51,7 @@ function onIceCandidate(event) {
 
 // Callback for when the SDP offer was successfully created.
 function onOfferCreated(description) {
+  console.log("[Client] onOfferCreated");
   rtcPeerConnection.setLocalDescription(description);
   webSocketConnection.send(
     JSON.stringify({ type: "offer", payload: description })
@@ -56,6 +60,7 @@ function onOfferCreated(description) {
 
 // Callback for when the WebSocket is successfully opened.
 function onWebSocketOpen() {
+  console.log("[Client] onWebSocketOpen");
   const config = { iceServers: [{ url: "stun:stun.l.google.com:19302" }] };
   rtcPeerConnection = new RTCPeerConnection(config);
   const dataChannelConfig = { ordered: false, maxRetransmits: 0 };
@@ -74,6 +79,7 @@ function onWebSocketOpen() {
 
 // Callback for when we receive a message from the server via the WebSocket.
 function onWebSocketMessage(event) {
+  console.log("[Client] onWebSocketMessage");
   const messageObject = JSON.parse(event.data);
   if (messageObject.type === "ping") {
     const key = messageObject.payload;

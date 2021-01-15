@@ -71,12 +71,14 @@ SetSessionDescriptionObserver set_session_description_observer;
 // Callback for when the data channel is successfully created. We need to
 // re-register the updated data channel here.
 void OnDataChannelCreated(webrtc::DataChannelInterface* channel) {
+    std::cout << "[Server] OnDataChannelCreated" << std::endl;
     data_channel = channel;
     data_channel->RegisterObserver(&data_channel_observer);
 }
 
 // Callback for when the STUN server responds with the ICE candidates.
 void OnIceCandidate(const webrtc::IceCandidateInterface* candidate) {
+    std::cout << "[Server] OnIceCandidate" << std::endl;
     std::string candidate_str;
     candidate->ToString(&candidate_str);
     rapidjson::Document message_object;
@@ -107,6 +109,7 @@ void OnIceCandidate(const webrtc::IceCandidateInterface* candidate) {
 
 // Callback for when the server receives a message on the data channel.
 void OnDataChannelMessage(const webrtc::DataBuffer& buffer) {
+    std::cout << "[Server] OnDataChannelMessage" << std::endl;
     // std::string data(buffer.data.data<char>(), buffer.data.size());
     // std::cout << data << std::endl;
     // std::string str = "pong";
@@ -118,6 +121,7 @@ void OnDataChannelMessage(const webrtc::DataBuffer& buffer) {
 // Callback for when the answer is created. This sends the answer back to the
 // client.
 void OnAnswerCreated(webrtc::SessionDescriptionInterface* desc) {
+    std::cout << "[Server] OnAnswerCreated" << std::endl;
     peer_connection->SetLocalDescription(&set_session_description_observer,
                                          desc);
     // Apologies for the poor code ergonomics here; I think rapidjson is just
@@ -147,6 +151,7 @@ void OnAnswerCreated(webrtc::SessionDescriptionInterface* desc) {
 void OnWebSocketMessage(WebSocketServer* /* s */,
                         websocketpp::connection_hdl hdl,
                         message_ptr msg) {
+    std::cout << "[Server] OnWebSocketMessage" << std::endl;
     websocket_connection_handler = hdl;
     rapidjson::Document message_object;
     message_object.Parse(msg->get_payload().c_str());
@@ -197,6 +202,7 @@ void OnWebSocketMessage(WebSocketServer* /* s */,
 // The thread entry point for the WebRTC thread. This sets the WebRTC thread as
 // the signaling thread and creates a worker thread in the background.
 void SignalThreadEntry() {
+    std::cout << "[Server] SignalThreadEntry" << std::endl;
     // Create the PeerConnectionFactory.
     rtc::InitializeSSL();
     peer_connection_factory = webrtc::CreatePeerConnectionFactory();
