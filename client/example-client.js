@@ -23,8 +23,8 @@ let dataChannel = null;
 const pingTimes = {};
 const pingLatency = {};
 let pingCount = 0;
-const PINGS_PER_SECOND = 20;
-const SECONDS_TO_PING = 20;
+const PINGS_PER_SECOND = 5;
+const SECONDS_TO_PING = 2;
 let pingInterval;
 let startTime;
 
@@ -54,11 +54,17 @@ function onOfferCreated(description) {
   webSocketConnection.send(
     JSON.stringify({ type: "offer", payload: description })
   );
+  console.log("onOfferCreated success");
+}
+
+function onOfferCreatedFailed(description) {
+  console.log("onOfferCreated failed");
 }
 
 // Callback for when the WebSocket is successfully opened.
 function onWebSocketOpen() {
   console.log("onWebSocketOpen begin");
+  // Google STUN server is for development use only.
   const config = { iceServers: [{ url: "stun:stun.l.google.com:19302" }] };
   rtcPeerConnection = new RTCPeerConnection(config);
   const dataChannelConfig = { ordered: false, maxRetransmits: 0 };
@@ -72,7 +78,11 @@ function onWebSocketOpen() {
     },
   };
   rtcPeerConnection.onicecandidate = onIceCandidate;
-  rtcPeerConnection.createOffer(onOfferCreated, () => {}, sdpConstraints);
+  rtcPeerConnection.createOffer(
+    onOfferCreated,
+    onOfferCreatedFailed,
+    sdpConstraints
+  );
   console.log("onWebSocketOpen end");
 }
 
@@ -142,8 +152,12 @@ function sendWebSocketPing() {
 }
 
 // Pings the server via the DataChannel once the connection has been established.
-function ping() {
+function wsPing() {
   startTime = performance.now();
-  // pingInterval = setInterval(sendDataChannelPing, 1000.0 / PINGS_PER_SECOND);
   pingInterval = setInterval(sendWebSocketPing, 1000.0 / PINGS_PER_SECOND);
+}
+
+function dataPing() {
+  startTime = performance.now();
+  pingInterval = setInterval(sendDataChannelPing, 1000.0 / PINGS_PER_SECOND);
 }

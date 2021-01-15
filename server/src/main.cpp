@@ -39,31 +39,42 @@ typedef WebSocketServer::message_ptr message_ptr;
 
 // The WebSocket server being used to handshake with the clients.
 WebSocketServer ws_server;
-// The peer conncetion factory that sets up signaling and worker threads. It is
+
+// The peer connection factory that sets up signaling and worker threads. It is
 // also used to create the PeerConnection.
+// Signaling thread: all other tasks.
+// Worker thread: resource-intensive tasks e.g. media streaming.
 rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface>
         peer_connection_factory;
+
 // The socket that the signaling thread and worker thread communicate on.
 rtc::PhysicalSocketServer socket_server;
+
 // The separate thread where all of the WebRTC code runs since we use the main
 // thread for the WebSocket listening loop.
 std::thread webrtc_thread;
+
 // The WebSocket connection handler that uniquely identifies one of the
 // connections that the WebSocket has open. If you want to have multiple
 // connections, you will need to store more than one of these.
 websocketpp::connection_hdl websocket_connection_handler;
+
 // The peer connection through which we engage in the SDP handshake.
 rtc::scoped_refptr<webrtc::PeerConnectionInterface> peer_connection;
+
 // The data channel used to communicate.
 rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel;
+
 // The observer that responds to peer connection events.
 PeerConnectionObserver peer_connection_observer(OnDataChannelCreated,
                                                 OnIceCandidate);
 // The observer that responds to data channel events.
 DataChannelObserver data_channel_observer(OnDataChannelMessage);
+
 // The observer that responds to session description creation events.
 CreateSessionDescriptionObserver create_session_description_observer(
         OnAnswerCreated);
+
 // The observer that responds to session description set events. We don't really
 // use this one here.
 SetSessionDescriptionObserver set_session_description_observer;
@@ -107,8 +118,8 @@ void OnIceCandidate(const webrtc::IceCandidateInterface* candidate) {
 
 // Callback for when the server receives a message on the data channel.
 void OnDataChannelMessage(const webrtc::DataBuffer& buffer) {
-    // std::string data(buffer.data.data<char>(), buffer.data.size());
-    // std::cout << data << std::endl;
+    std::string data(buffer.data.data<char>(), buffer.data.size());
+    std::cout << data << std::endl;
     // std::string str = "pong";
     // webrtc::DataBuffer resp(rtc::CopyOnWriteBuffer(str.c_str(),
     // str.length()), false /* binary */);
