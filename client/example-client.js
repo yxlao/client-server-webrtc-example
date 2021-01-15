@@ -41,17 +41,28 @@ function onDataChannelOpen() {
 
 function onDataChannelError(description) {
   console.log("[Client] onDataChannelError: " + description.error);
+  console.log(
+    "onDataChannelError dataChannel.readyState: " + dataChannel.readyState
+  );
 }
 
 // Callback for when the STUN server responds with the ICE candidates.
 // Step 7: Client 1 send the ICE candidate to server.
 function onIceCandidate(event) {
+  console.log(
+    "[Client] onIceCandidate:: before dataChannel.readyState: " +
+      dataChannel.readyState
+  );
   console.log("[Client] onIceCandidate");
   if (event && event.candidate) {
     webSocketConnection.send(
       JSON.stringify({ type: "candidate", payload: event.candidate })
     );
   }
+  console.log(
+    "[Client] onIceCandidate:: after dataChannel.readyState: " +
+      dataChannel.readyState
+  );
 }
 
 // Callback for when the SDP offer was successfully created.
@@ -70,10 +81,7 @@ function onWebSocketOpen() {
   const config = { iceServers: [{ url: "stun:stun.l.google.com:19302" }] };
   rtcPeerConnection = new RTCPeerConnection(config);
   const dataChannelConfig = { ordered: false, maxRetransmits: 0 };
-  dataChannel = rtcPeerConnection.createDataChannel("dc", dataChannelConfig);
-  dataChannel.onmessage = onDataChannelMessage;
-  dataChannel.onopen = onDataChannelOpen;
-  dataChannel.onerror = onDataChannelError;
+
   const sdpConstraints = {
     mandatory: {
       OfferToReceiveAudio: false,
@@ -82,18 +90,36 @@ function onWebSocketOpen() {
   };
   rtcPeerConnection.onicecandidate = onIceCandidate;
   // Step 3: Client 1 creates an “offer".
+  dataChannel = rtcPeerConnection.createDataChannel("dc", dataChannelConfig);
+  console.log("dataChannel.readyState 1: " + dataChannel.readyState);
   rtcPeerConnection.createOffer(onOfferCreated, () => {}, sdpConstraints);
+  rtcPeerConnection.oniceconnectionstatechange = (e) =>
+    console.log(
+      "oniceconnectionstatechange: " + rtcPeerConnection.iceConnectionState
+    );
+  rtcPeerConnection.ondatachannel = (event) => (dataChannel = event.channel);
+  console.log("dataChannel.readyState 2: " + dataChannel.readyState);
+
+  dataChannel.onmessage = onDataChannelMessage;
+  dataChannel.onopen = onDataChannelOpen;
+  dataChannel.onerror = onDataChannelError;
+  console.log("dataChannel.readyState 3: " + dataChannel.readyState);
 }
 
 // Callback for when we receive a message from the server via the WebSocket.
 function onWebSocketMessage(event) {
   const messageObject = JSON.parse(event.data);
   console.log("[Client] onWebSocketMessage::" + messageObject.type);
+  console.log(
+    "[Client] onWebSocketMessage:: before dataChannel.readyState: " +
+      dataChannel.readyState
+  );
   if (messageObject.type === "ping") {
     const key = messageObject.payload;
     pingLatency[key] = performance.now() - pingTimes[key];
   } else if (messageObject.type === "answer") {
     // Step 7: Client 1 receives and verifies the answer.
+
     rtcPeerConnection.setRemoteDescription(
       new RTCSessionDescription(messageObject.payload)
     );
@@ -104,6 +130,10 @@ function onWebSocketMessage(event) {
   } else {
     console.log("Unrecognized WebSocket message type.");
   }
+  console.log(
+    "[Client] onWebSocketMessage:: after dataChannel.readyState: " +
+      dataChannel.readyState
+  );
 }
 
 // Connects by creating a new WebSocket connection and associating some callbacks.

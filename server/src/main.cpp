@@ -174,12 +174,13 @@ void OnWebSocketMessage(WebSocketServer* /* s */,
 
         peer_connection = peer_connection_factory->CreatePeerConnection(
                 configuration, nullptr, nullptr, &peer_connection_observer);
-        webrtc::DataChannelInit data_channel_config;
-        data_channel_config.ordered = false;
-        data_channel_config.maxRetransmits = 0;
-        data_channel =
-                peer_connection->CreateDataChannel("dc", &data_channel_config);
-        data_channel->RegisterObserver(&data_channel_observer);
+        // webrtc::DataChannelInit data_channel_config;
+        // data_channel_config.ordered = false;
+        // data_channel_config.maxRetransmits = 0;
+        // data_channel =
+        //         peer_connection->CreateDataChannel("dc",
+        //         &data_channel_config);
+        // data_channel->RegisterObserver(&data_channel_observer);
 
         webrtc::SdpParseError error;
         webrtc::SessionDescriptionInterface* session_description(
