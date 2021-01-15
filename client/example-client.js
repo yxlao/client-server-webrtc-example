@@ -39,6 +39,10 @@ function onDataChannelOpen() {
   console.log("Data channel opened!");
 }
 
+function onDataChannelError(description) {
+  console.log("[Client] onDataChannelError: " + description.error);
+}
+
 // Callback for when the STUN server responds with the ICE candidates.
 // Step 7: Client 1 send the ICE candidate to server.
 function onIceCandidate(event) {
@@ -69,6 +73,7 @@ function onWebSocketOpen() {
   dataChannel = rtcPeerConnection.createDataChannel("dc", dataChannelConfig);
   dataChannel.onmessage = onDataChannelMessage;
   dataChannel.onopen = onDataChannelOpen;
+  dataChannel.onerror = onDataChannelError;
   const sdpConstraints = {
     mandatory: {
       OfferToReceiveAudio: false,
