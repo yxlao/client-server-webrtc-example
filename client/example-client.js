@@ -45,6 +45,7 @@ function onDataChannelError(description) {
 
 // Callback for when the STUN server responds with the ICE candidates.
 function onIceCandidate(event) {
+  console.log("client: onIceCandidate");
   if (event && event.candidate) {
     webSocketConnection.send(
       JSON.stringify({ type: "candidate", payload: event.candidate })
@@ -96,10 +97,12 @@ function onWebSocketMessage(event) {
     const key = messageObject.payload;
     pingLatency[key] = performance.now() - pingTimes[key];
   } else if (messageObject.type === "answer") {
+    console.log("answer received from server");
     rtcPeerConnection.setRemoteDescription(
       new RTCSessionDescription(messageObject.payload)
     );
   } else if (messageObject.type === "candidate") {
+    console.log("candidate received from server");
     rtcPeerConnection.addIceCandidate(
       new RTCIceCandidate(messageObject.payload)
     );

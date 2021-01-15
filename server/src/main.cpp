@@ -89,6 +89,7 @@ void OnDataChannelCreated(webrtc::DataChannelInterface* channel) {
 
 // Callback for when the STUN server responds with the ICE candidates.
 void OnIceCandidate(const webrtc::IceCandidateInterface* candidate) {
+    std::cout << "server::OnIceCandidate" << std::endl;
     std::string candidate_str;
     candidate->ToString(&candidate_str);
     rapidjson::Document message_object;
@@ -131,6 +132,7 @@ void OnDataChannelMessage(const webrtc::DataBuffer& buffer) {
 // Callback for when the answer is created. This sends the answer back to the
 // client.
 void OnAnswerCreated(webrtc::SessionDescriptionInterface* desc) {
+    std::cout << "server::OnAnswerCreated" << std::endl;
     peer_connection->SetLocalDescription(&set_session_description_observer,
                                          desc);
     // Apologies for the poor code ergonomics here; I think rapidjson is just
@@ -154,6 +156,7 @@ void OnAnswerCreated(webrtc::SessionDescriptionInterface* desc) {
     std::string payload = strbuf.GetString();
     ws_server.send(websocket_connection_handler, payload,
                    websocketpp::frame::opcode::value::text);
+    std::cout << "server::OnAnswerCreated done" << std::endl;
 }
 
 // Callback for when the WebSocket server receives a message from the client.
@@ -192,6 +195,7 @@ void OnWebSocketMessage(WebSocketServer* /* s */,
                                                  &error));
         peer_connection->SetRemoteDescription(&set_session_description_observer,
                                               session_description);
+        // Triggers OnAnswerCreated.
         peer_connection->CreateAnswer(&create_session_description_observer,
                                       nullptr);
     } else if (type == "candidate") {
@@ -203,6 +207,7 @@ void OnWebSocketMessage(WebSocketServer* /* s */,
         webrtc::SdpParseError error;
         auto candidate_object = webrtc::CreateIceCandidate(
                 sdp_mid, sdp_mline_index, candidate, &error);
+        // This should trigger OnIceCandidate.
         peer_connection->AddIceCandidate(candidate_object);
     } else if (type == "print_only") {
         std::string message = message_object["payload"].GetString();

@@ -9,6 +9,7 @@
 #include <webrtc/api/peerconnectioninterface.h>
 
 #include <functional>
+#include <iostream>
 
 // PeerConnection events.
 class PeerConnectionObserver : public webrtc::PeerConnectionObserver {
@@ -23,32 +24,36 @@ public:
 
     // Override signaling change.
     void OnSignalingChange(
-            webrtc::PeerConnectionInterface::SignalingState /* new_state */) {}
+            webrtc::PeerConnectionInterface::SignalingState /* new_state */)
+            override {}
 
     // Override adding a stream.
-    void OnAddStream(webrtc::MediaStreamInterface* /* stream */) {}
+    void OnAddStream(webrtc::MediaStreamInterface* /* stream */) override {}
 
     // Override removing a stream.
-    void OnRemoveStream(webrtc::MediaStreamInterface* /* stream */) {}
+    void OnRemoveStream(webrtc::MediaStreamInterface* /* stream */) override {}
 
     // Override data channel change.
-    void OnDataChannel(webrtc::DataChannelInterface* channel) {
+    void OnDataChannel(webrtc::DataChannelInterface* channel) override {
         on_data_channel(channel);
     }
 
     // Override renegotiation.
-    void OnRenegotiationNeeded() {}
+    void OnRenegotiationNeeded() override {}
 
     // Override ICE connection change.
-    void OnIceConnectionChange(webrtc::PeerConnectionInterface::
-                                       IceConnectionState /* new_state */) {}
+    void OnIceConnectionChange(
+            webrtc::PeerConnectionInterface::IceConnectionState /* new_state */)
+            override {}
 
     // Override ICE gathering change.
-    void OnIceGatheringChange(webrtc::PeerConnectionInterface::
-                                      IceGatheringState /* new_state */) {}
+    void OnIceGatheringChange(
+            webrtc::PeerConnectionInterface::IceGatheringState /* new_state */)
+            override {}
 
     // Override ICE candidate.
-    void OnIceCandidate(const webrtc::IceCandidateInterface* candidate) {
+    void OnIceCandidate(
+            const webrtc::IceCandidateInterface* candidate) override {
         on_ice_candidate(candidate);
     }
 
@@ -66,13 +71,15 @@ public:
         : on_message{on_message} {}
 
     // Change in state of the Data Channel.
-    void OnStateChange() {}
+    void OnStateChange() override {}
 
     // Message received.
-    void OnMessage(const webrtc::DataBuffer& buffer) { on_message(buffer); }
+    void OnMessage(const webrtc::DataBuffer& buffer) override {
+        on_message(buffer);
+    }
 
     // Buffered amount change.
-    void OnBufferedAmountChange(uint64_t /* previous_amount */) {}
+    void OnBufferedAmountChange(uint64_t /* previous_amount */) override {}
 
 private:
     std::function<void(const webrtc::DataBuffer&)> on_message;
@@ -89,18 +96,18 @@ public:
         : on_success{on_success} {}
 
     // Successfully created a session description.
-    void OnSuccess(webrtc::SessionDescriptionInterface* desc) {
+    void OnSuccess(webrtc::SessionDescriptionInterface* desc) override {
         on_success(desc);
     }
 
     // Failure to create a session description.
-    void OnFailure(const std::string& /* error */) {}
+    void OnFailure(const std::string& /* error */) override {}
 
     // Unimplemented virtual function.
-    int AddRef() const { return 0; }
+    int AddRef() const override { return 0; }
 
     // Unimplemented virtual function.
-    int Release() const { return 0; }
+    int Release() const override { return 0; }
 
 private:
     std::function<void(webrtc::SessionDescriptionInterface*)> on_success;
@@ -114,16 +121,16 @@ public:
     SetSessionDescriptionObserver() {}
 
     // Successfully set a session description.
-    void OnSuccess() {}
+    void OnSuccess() override {}
 
     // Failure to set a sesion description.
-    void OnFailure(const std::string& /* error */) {}
+    void OnFailure(const std::string& /* error */) override {}
 
     // Unimplemented virtual function.
-    int AddRef() const { return 0; }
+    int AddRef() const override { return 0; }
 
     // Unimplemented virtual function.
-    int Release() const { return 0; }
+    int Release() const override { return 0; }
 };
 
 #endif  // WEBRTC_EXAMPLE_SERVER_OBSERVERS_H
