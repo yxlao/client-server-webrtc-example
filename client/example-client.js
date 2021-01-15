@@ -39,6 +39,10 @@ function onDataChannelOpen() {
   console.log("Data channel opened!");
 }
 
+function onDataChannelError() {
+  console.log("Data channel error!");
+}
+
 // Callback for when the STUN server responds with the ICE candidates.
 function onIceCandidate(event) {
   if (event && event.candidate) {
@@ -57,10 +61,6 @@ function onOfferCreated(description) {
   console.log("onOfferCreated success");
 }
 
-function onOfferCreatedFailed(description) {
-  console.log("onOfferCreated failed");
-}
-
 // Callback for when the WebSocket is successfully opened.
 function onWebSocketOpen() {
   console.log("onWebSocketOpen begin");
@@ -71,6 +71,7 @@ function onWebSocketOpen() {
   dataChannel = rtcPeerConnection.createDataChannel("dc", dataChannelConfig);
   dataChannel.onmessage = onDataChannelMessage;
   dataChannel.onopen = onDataChannelOpen;
+  dataChannel.onerror = onDataChannelError;
   const sdpConstraints = {
     mandatory: {
       OfferToReceiveAudio: false,
@@ -78,11 +79,7 @@ function onWebSocketOpen() {
     },
   };
   rtcPeerConnection.onicecandidate = onIceCandidate;
-  rtcPeerConnection.createOffer(
-    onOfferCreated,
-    onOfferCreatedFailed,
-    sdpConstraints
-  );
+  rtcPeerConnection.createOffer(onOfferCreated, () => {}, sdpConstraints);
   console.log("onWebSocketOpen end");
 }
 
