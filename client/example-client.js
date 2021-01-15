@@ -10,7 +10,7 @@
  */
 
 // URL to the server with the port we are using for WebSockets.
-const webSocketUrl = "ws://54.191.242.239:8080";
+const webSocketUrl = "ws://localhost:8888";
 // The WebSocket object used to manage a connection.
 let webSocketConnection = null;
 // The RTCPeerConnection through which we engage in the SDP handshake.
@@ -21,8 +21,8 @@ let dataChannel = null;
 const pingTimes = {};
 const pingLatency = {};
 let pingCount = 0;
-const PINGS_PER_SECOND = 20;
-const SECONDS_TO_PING = 20;
+const PINGS_PER_SECOND = 5;
+const SECONDS_TO_PING = 2;
 let pingInterval;
 let startTime;
 
